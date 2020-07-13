@@ -1,5 +1,5 @@
-# from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask import Flask, render_template, request, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+# from flask import Flask, render_template, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import sys
@@ -26,6 +26,31 @@ class Todo(db.Model):
 
 
 # db.create_all()
+@app.route('/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    try:
+        Todo.query.filter_by(id=todo_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return jsonify({ 'success': True })
+
+
+
+@app.route('/todos/<todo_id>/get-checked', methods=['POST'])
+def check_completed(todo_id):
+    try:
+        checked = request.get_json()['completed']
+        todo = Todo.query.get(todo_id)
+        todo.completed = checked
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
 
 
 @app.route('/todos/create', methods=['POST'])
